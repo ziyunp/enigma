@@ -5,19 +5,17 @@
 #include "errors.h"
 using namespace std;
 
-int const TOTAL_ALPHABET_COUNT = 26;
 
 Plugboard::Plugboard (char * config) : config_file(config) {
 }
 
 int Plugboard::setup() {
-  // assign values to data members: config_pairs, num
+  // assign values to data members: pb_config[], num
 
   ifstream in(config_file);
   if (!in) 
     return ERROR_OPENING_CONFIGURATION_FILE;
 
-  int pb_config[TOTAL_ALPHABET_COUNT];
   int count = 0;
   in >> pb_config[count];
 
@@ -39,8 +37,23 @@ int Plugboard::setup() {
           return IMPOSSIBLE_PLUGBOARD_CONFIGURATION;
       }
     }
-  config_pairs = pb_config;
   }
-
   return NO_ERROR;
+}
+
+void Plugboard::process_input(char& input) {
+  if (num == 0) 
+    return;
+  // better way of conversion?
+  int letter = input - 'A';
+
+  for (int i=0; i < num; i++) {
+    if (pb_config[i] == letter) {
+      if (i % 2 == 0)
+        input = pb_config[i+1] + 'A';
+      else
+        input = pb_config[i-1] + 'A';
+      return;
+    }
+  }
 }

@@ -11,19 +11,17 @@ void check_error (int res);
 int main(int argc, char** argv) {
     int res;
     // configure settings
-    char * pb_config = argv[1];
-
-    Plugboard pb(pb_config);
+    char * pb_configfile = argv[1];
+    Plugboard pb(pb_configfile);
     res = pb.setup();
     check_error(res);
 
-    char input, output = 'A';
+    char input;
     cout << "This program simulates a general Enigma machine.\n";
-
     
     res = prompt_for_input(input);
     check_error(res);
-
+    pb.process_input(input);
 
     cout << input << endl;
     return 0;
@@ -46,7 +44,7 @@ int prompt_for_input (char& input) {
         
     cin >> input;
 
-    if (input < 'A' && input > 'Z')
+    if (input < 'A' || input > 'Z') 
         return INVALID_INPUT_CHARACTER;
 
     return NO_ERROR;
