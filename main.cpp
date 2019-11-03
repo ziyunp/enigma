@@ -4,16 +4,26 @@
 using namespace std;
 
 int const MAX_LENGTH = 100;
+int const MIN_PARAMETERS = 4; // 
 
 int prompt_for_input (char& input);
 void check_error (int res);
 
 int main(int argc, char** argv) {
     int res;
+    // if (argc < MIN_PARAMETERS) 
+    //  res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
+    // check_error(res);
+
     // configure settings
-    char * pb_configfile = argv[1];
-    Plugboard pb(pb_configfile);
+    char * pb_file = argv[1];
+    Plugboard pb(pb_file);
     res = pb.setup();
+    check_error(res);
+
+    char * rf_file = argv[2];
+    Reflector rf(rf_file);
+    res = rf.setup();
     check_error(res);
 
     char input;
@@ -21,7 +31,9 @@ int main(int argc, char** argv) {
     
     res = prompt_for_input(input);
     check_error(res);
-    pb.process_input(input);
+    if (pb.num) 
+        pb.process_input(input);
+    rf.process_input(input);
 
     cout << input << endl;
     return 0;

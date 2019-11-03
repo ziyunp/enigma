@@ -6,8 +6,7 @@
 using namespace std;
 
 
-Plugboard::Plugboard (char * config) : config_file(config) {
-}
+Plugboard::Plugboard (char * config) : config_file(config) {}
 
 int Plugboard::setup() {
   // assign values to data members: pb_config[], num
@@ -19,9 +18,12 @@ int Plugboard::setup() {
   int count = 0;
   in >> pb_config[count];
 
-  while(!in.eof()) {
+  while(!in.eof() && !in.fail()) {
     in >> pb_config[++count] >> ws;
   }
+
+  if(in.fail())
+    return NON_NUMERIC_CHARACTER;
   
   if (count > 0) {
     num = count + 1;
@@ -42,8 +44,6 @@ int Plugboard::setup() {
 }
 
 void Plugboard::process_input(char& input) {
-  if (num == 0) 
-    return;
   // better way of conversion?
   int letter = input - 'A';
 
@@ -57,3 +57,55 @@ void Plugboard::process_input(char& input) {
     }
   }
 }
+
+Reflector::Reflector (char * config) : config_file(config) {}
+
+int Reflector::setup() {
+  // assign values to data members: pb_config[], num
+
+  ifstream in(config_file);
+  if (!in) 
+    return ERROR_OPENING_CONFIGURATION_FILE;
+
+  int count = 0;
+  in >> rf_config[count];
+    
+  while(!in.eof() && !in.fail()) {
+    in >> rf_config[++count] >> ws;
+  }
+
+  if(in.fail()) 
+    return NON_NUMERIC_CHARACTER;
+
+  int num = count + 1;
+  if(num != TOTAL_ALPHABET_COUNT)
+    return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
+
+  for (int i=0; i < num; i++) {
+    if (rf_config[i] < 0 || rf_config[i] > 25)
+      return INVALID_INDEX;
+    
+    for (int j= i + 1; j < num; j++) {
+      if(rf_config[i] == rf_config[j]) 
+        return IMPOSSIBLE_PLUGBOARD_CONFIGURATION;
+    }
+  }
+  return NO_ERROR;
+}
+
+void Reflector::process_input(char& input) {
+  cout << "rf input: " << input << endl;
+  // better way of conversion?
+  int letter = input - 'A';
+
+  for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+    if (rf_config[i] == letter) {
+      if (i % 2 == 0)
+        input = rf_config[i+1] + 'A';
+      else
+        input = rf_config[i-1] + 'A';
+      return;
+    }
+  }
+}
+
