@@ -61,7 +61,7 @@ void Plugboard::process_input(char& input) {
 Reflector::Reflector (char * config) : config_file(config) {}
 
 int Reflector::setup() {
-  // assign values to data members: pb_config[], num
+  // assign values to data members: rf_config[]
 
   ifstream in(config_file);
   if (!in) 
@@ -81,13 +81,13 @@ int Reflector::setup() {
   if(num != TOTAL_ALPHABET_COUNT)
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
 
-  for (int i=0; i < num; i++) {
+  for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] < 0 || rf_config[i] > 25)
       return INVALID_INDEX;
     
-    for (int j= i + 1; j < num; j++) {
+    for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rf_config[i] == rf_config[j]) 
-        return IMPOSSIBLE_PLUGBOARD_CONFIGURATION;
+        return INVALID_REFLECTOR_MAPPING;
     }
   }
   return NO_ERROR;
@@ -108,4 +108,71 @@ void Reflector::process_input(char& input) {
     }
   }
 }
+
+Rotor::Rotor (char * config) : config_file(config) {}
+
+int Rotor::setup() {
+  // assign values to data members: rot_config[], notch[], num_of_notch
+
+  ifstream in(config_file);
+  if (!in) 
+    return ERROR_OPENING_CONFIGURATION_FILE;
+  int notch_index = 0;
+  int count = 0;
+  in >> rot_config[count];
+
+  while(!in.eof() && !in.fail()) {
+    count++;
+    if (count >= TOTAL_ALPHABET_COUNT)
+      in >> notch[notch_index++] >> ws;
+    else 
+      in >> rot_config[count] >> ws;
+  }
+
+  num_of_notch = notch_index;
+
+  if(in.fail()) 
+    return NON_NUMERIC_CHARACTER;
+
+  // min 26: alphabets 0-25 + 1 notch
+  if(count < TOTAL_ALPHABET_COUNT)
+    return INVALID_ROTOR_MAPPING;
+
+  for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+    if (rot_config[i] < 0 || rot_config[i] > 25)
+      return INVALID_INDEX;
+    
+    for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
+      if(rot_config[i] == rot_config[j]) 
+        return INVALID_ROTOR_MAPPING;
+    }
+  }
+
+  // check for repeated notch value
+  for (int i=0; i < num_of_notch; i++) {
+    if (notch[i] < 0 || notch[i] > 25)
+      return INVALID_INDEX;
+    
+    for (int j= i + 1; j < num_of_notch; j++) {
+      if(notch[i] == notch[j]) 
+        return INVALID_ROTOR_MAPPING;
+    }
+  }
+
+  // check if every input is mapped
+  // int letter;
+  // for (letter=0; letter < TOTAL_ALPHABET_COUNT; letter++) {
+  //   int i;
+  //   for (i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+  //     if (rot_config[i] == letter)
+  //       break;
+  //   }
+  //   if (i == TOTAL_ALPHABET_COUNT) 
+  //     return INVALID_ROTOR_MAPPING;
+  // }
+
+  return NO_ERROR;
+}
+
+
 

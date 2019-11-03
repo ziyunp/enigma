@@ -14,7 +14,8 @@ int main(int argc, char** argv) {
     // if (argc < MIN_PARAMETERS) 
     //  res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
     // check_error(res);
-
+    // if (argc == MIN_PARAMETERS) 
+    //     char * pos_file = argv(3);
     // configure settings
     char * pb_file = argv[1];
     Plugboard pb(pb_file);
@@ -24,6 +25,11 @@ int main(int argc, char** argv) {
     char * rf_file = argv[2];
     Reflector rf(rf_file);
     res = rf.setup();
+    check_error(res);
+
+    char * rot_file = argv[3];
+    Rotor rot(rot_file);
+    res = rot.setup();
     check_error(res);
 
     char input;
