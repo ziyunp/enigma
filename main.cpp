@@ -3,19 +3,14 @@
 #include "errors.h"
 using namespace std;
 
-int const MAX_LENGTH = 100;
-int const MIN_PARAMETERS = 4; // 
-
-int prompt_for_input (char& input);
-void check_error (int res);
 
 int main(int argc, char** argv) {
-    int res;
-    // if (argc < MIN_PARAMETERS) 
-    //  res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
-    // check_error(res);
-    // if (argc == MIN_PARAMETERS) 
-    //     char * pos_file = argv(3);
+    int res = 0;
+    if (argc < MIN_PARAMETERS) {
+        res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
+        check_error(res);
+    }
+
     // configure settings
     char * pb_file = argv[1];
     Plugboard pb(pb_file);
@@ -27,21 +22,26 @@ int main(int argc, char** argv) {
     res = rf.setup();
     check_error(res);
 
-    char * rot_file = argv[3];
-    Rotor rot(rot_file);
-    res = rot.setup();
-    check_error(res);
+    // char * pos_file = argv[argc - 1];
+
+    int num_of_rotors = argc - MIN_PARAMETERS;
+
+    auto rotors_ptr = setup_rotors(num_of_rotors, argv); // need cleaning
 
     char input;
     cout << "This program simulates a general Enigma machine.\n";
     
     res = prompt_for_input(input);
     check_error(res);
-    if (pb.num) 
-        pb.process_input(input);
-    rf.process_input(input);
 
-    cout << input << endl;
+    int letter = input - 'A';
+    if (pb.num) 
+        pb.process_input(letter);
+    rf.process_input(letter);
+    rotors_ptr[0]->process_input(letter);
+
+    char output = letter + 'A';
+    cout << output << endl;
     return 0;
 }
 
@@ -73,7 +73,7 @@ void check_error (int res) {
     if (res == 0)
         return;
     else
-        cout << "Error. ";
+        cout << "Error. Res: " << res;
      
     switch (res) {
         case INSUFFICIENT_NUMBER_OF_PARAMETERS:
@@ -113,6 +113,21 @@ void check_error (int res) {
             cout << "\n";
     }
     exit(1);
-    return;
-    // exit?
 }
+
+Rotor** setup_rotors(int num, char** const argv) {
+    if (num == 0) return NULL;
+
+    int const min_file_index = 3, max_file_index = 3 + num;
+    int file_index = min_file_index, i=0;
+    Rotor** rot_ptr = new Rotor * [num] {};
+    for (; file_index < max_file_index; file_index++) {
+        char * rot_file = argv[file_index];
+        Rotor* rotor = new Rotor(rot_file);
+        int res = rotor->setup();
+        check_error(res);
+        rot_ptr[i] = rotor;
+        i++;
+    }
+    return rot_ptr;
+} 

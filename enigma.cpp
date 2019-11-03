@@ -43,16 +43,13 @@ int Plugboard::setup() {
   return NO_ERROR;
 }
 
-void Plugboard::process_input(char& input) {
-  // better way of conversion?
-  int letter = input - 'A';
-
+void Plugboard::process_input(int& input) {
   for (int i=0; i < num; i++) {
-    if (pb_config[i] == letter) {
+    if (pb_config[i] == input) {
       if (i % 2 == 0)
-        input = pb_config[i+1] + 'A';
+        input = pb_config[i+1];
       else
-        input = pb_config[i-1] + 'A';
+        input = pb_config[i-1];
       return;
     }
   }
@@ -93,17 +90,15 @@ int Reflector::setup() {
   return NO_ERROR;
 }
 
-void Reflector::process_input(char& input) {
+void Reflector::process_input(int& input) {
   cout << "rf input: " << input << endl;
   // better way of conversion?
-  int letter = input - 'A';
-
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
-    if (rf_config[i] == letter) {
+    if (rf_config[i] == input) {
       if (i % 2 == 0)
-        input = rf_config[i+1] + 'A';
+        input = rf_config[i+1];
       else
-        input = rf_config[i-1] + 'A';
+        input = rf_config[i-1];
       return;
     }
   }
@@ -158,21 +153,27 @@ int Rotor::setup() {
         return INVALID_ROTOR_MAPPING;
     }
   }
-
-  // check if every input is mapped
-  // int letter;
-  // for (letter=0; letter < TOTAL_ALPHABET_COUNT; letter++) {
-  //   int i;
-  //   for (i=0; i < TOTAL_ALPHABET_COUNT; i++) {
-  //     if (rot_config[i] == letter)
-  //       break;
-  //   }
-  //   if (i == TOTAL_ALPHABET_COUNT) 
-  //     return INVALID_ROTOR_MAPPING;
-  // }
-
   return NO_ERROR;
 }
 
+void Rotor::process_input(int& input, bool mapped_backwards) {
+  cout << "rot input: " << input << endl;
+  if (!mapped_backwards) {
+    input = rot_config[input];
+  } else 
+    input = rot_config[25-input];
+  
+  rotate(rot_config);
+  cout << "rot output: " << input << endl;
+}
 
+void Rotor::rotate(int config[]) {
+  int last = config[TOTAL_ALPHABET_COUNT - 1];
+  int index = TOTAL_ALPHABET_COUNT - 1;
+  for (; index >= 0; index--) {
+    if (index == 0)
+      config[index] = last;
+    else config[index] = config[index - 1];
+  }
+}
 
