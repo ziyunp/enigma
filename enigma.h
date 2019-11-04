@@ -1,7 +1,7 @@
 using namespace std;
 
 int const TOTAL_ALPHABET_COUNT = 26;
-int const MAX_LENGTH = 100;
+int const MAX_LENGTH = 80;
 int const MIN_PARAMETERS = 4;
 
 class Plugboard {
@@ -42,7 +42,7 @@ class Rotor {
 
 };
 
-int prompt_for_input (char& input);
+int prompt_for_input (char input[], int& input_length);
 void check_error (int res);
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]);
 int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]);

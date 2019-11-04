@@ -3,10 +3,9 @@
 #include "errors.h"
 using namespace std;
 
-
 int main(int argc, char** argv) {
-    char input, output;
-    int res = 0, num_of_rotors = 0;
+    char input[MAX_LENGTH], output[MAX_LENGTH];
+    int res = 0, num_of_rotors = 0, input_length = 0;
     if (argc < MIN_PARAMETERS) {
         res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
         check_error(res);
@@ -32,38 +31,29 @@ int main(int argc, char** argv) {
     Rotor** rotors_ptr = setup_rotors(num_of_rotors, argv, starting_pos); // need cleaning
 
     cout << "This program simulates a general Enigma machine.\n";
-    res = prompt_for_input(input);
+    res = prompt_for_input(input, input_length);
     check_error(res);
-
+    for (int i=0; i<input_length; i++) 
+        cout << input[i] << endl;
+        
     // process input: pb -> rotors -> rf -> rotors(backwards) -> pb
-    int letter = input - 'A';
-    pb.process_input(letter);
+    for (int i=0; i<input_length; i++) {
+        int letter = input[i] - 'A';
+        pb.process_input(letter);
 
-    bool mapped_backwards = false;
-    rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
-    rf.process_input(letter); 
-    mapped_backwards = true;
-    rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+        bool mapped_backwards = false;
+        rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+        rf.process_input(letter); 
+        mapped_backwards = true;
+        rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
 
-    pb.process_input(letter);
+        pb.process_input(letter);
 
-    output = letter + 'A';
-    cout << output << endl;
+        output[i] = letter + 'A';
+    }
+    for (int i=0; i<input_length; i++) 
+        cout << output[i] << endl;
+
     return 0;
 }
 
-void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards){
-    bool rotate_self = false, rotate_next = false;
-    if (!mapped_backwards) {
-        for (int i=0; i<num_of_rotors; i++) {
-            if (i == 0)
-                rotate_self = true;
-            else rotate_self = rotate_next;
-            rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
-        }
-    } else {
-        rotate_self = false;
-        for (int i = num_of_rotors - 1; i >= 0; i--)
-            rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
-    }
-}

@@ -204,27 +204,35 @@ bool Rotor::rotate_next() {
   return false;
 }
 
-int prompt_for_input (char& input) {
-    cout << "Please input an uppercase letter (A-Z) to be encrypted/decrypted.\n";
-    // receive an array of chars and read in a loop
-    // check for invalid chars on looping
-    // discard whitespac
-    // char input_arr [MAX_LENGTH];
-    // cin >> input_arr;
+int prompt_for_input (char input[], int& input_length) {
+  char input_arr[MAX_LENGTH];
+  cout << "Please input an uppercase letter (A-Z) to be encrypted/decrypted.\n";
+  // receive an array of chars and read in a loop
+  // check for invalid chars on looping / 
+  // discard whitespace
+  // char input_arr [MAX_LENGTH];
+  // cin >> input_arr;
 
-    // for (int i=0; i<MAX_LENGTH; i++) {
-    //     input = input_arr[i];
+  // for (int i=0; i<MAX_LENGTH; i++) {
+  //     input = input_arr[i];
 
-    // }
+  // }
 
-    // cout << input_arr << endl;
-        
-    cin >> input;
+  // cout << input_arr << endl;
+  cin.getline(input_arr, 80);
 
-    if (input < 'A' || input > 'Z') 
-        return INVALID_INPUT_CHARACTER;
+  int i, count = 0;
+  for (i=0; input_arr[i] != '\0' && i < MAX_LENGTH; i++) {
+    if (input_arr[i] == ' ') 
+      continue;
+    if (input_arr[i] < 'A' || input_arr[i] > 'Z') 
+      return INVALID_INPUT_CHARACTER;
+    input[count++] = input_arr[i];
+  }
+  cout << "count: " << count << endl;
+  input_length = count;
 
-    return NO_ERROR;
+  return NO_ERROR;
 
 }
 
@@ -315,4 +323,20 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
         return INVALID_INDEX;
     }
     return NO_ERROR;
+}
+
+void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards){
+    bool rotate_self = false, rotate_next = false;
+    if (!mapped_backwards) {
+        for (int i=0; i<num_of_rotors; i++) {
+            if (i == 0)
+                rotate_self = true;
+            else rotate_self = rotate_next;
+            rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+        }
+    } else {
+        rotate_self = false;
+        for (int i = num_of_rotors - 1; i >= 0; i--) 
+            rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+    }
 }
