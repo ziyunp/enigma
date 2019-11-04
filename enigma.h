@@ -27,8 +27,6 @@ class Reflector {
 };
 
 class Rotor {
-  // rotor position: 0 = rightmost
-  int rotor_position;
   char * config_file;
   int rot_config[TOTAL_ALPHABET_COUNT] = {};
   int notch[TOTAL_ALPHABET_COUNT] = {};
@@ -38,10 +36,13 @@ class Rotor {
   public: 
     Rotor (char * config);
     int setup();
+    void set_starting_position(int init);
     void process_input(int& input, bool mapped_backwards = false);
 
 };
 
 int prompt_for_input (char& input);
 void check_error (int res);
-Rotor** setup_rotors(int num, char** const argv);
+Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]);
+int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]);
+
