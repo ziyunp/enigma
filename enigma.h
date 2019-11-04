@@ -31,13 +31,14 @@ class Rotor {
   int rot_config[TOTAL_ALPHABET_COUNT] = {};
   int notch[TOTAL_ALPHABET_COUNT] = {};
   int num_of_notch = 0;
-  void rotate(int config[]);
+  void rotate();
+  bool rotate_next();
 
   public: 
     Rotor (char * config);
     int setup();
     void set_starting_position(int init);
-    void process_input(int& input, bool mapped_backwards = false);
+    bool process_input(int& input, bool rotate_self = false,  bool mapped_backwards = false);
 
 };
 
@@ -45,4 +46,4 @@ int prompt_for_input (char& input);
 void check_error (int res);
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]);
 int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]);
-
+void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards);

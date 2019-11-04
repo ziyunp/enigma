@@ -32,18 +32,38 @@ int main(int argc, char** argv) {
     Rotor** rotors_ptr = setup_rotors(num_of_rotors, argv, starting_pos); // need cleaning
 
     cout << "This program simulates a general Enigma machine.\n";
-    
     res = prompt_for_input(input);
     check_error(res);
 
     // process input: pb -> rotors -> rf -> rotors(backwards) -> pb
     int letter = input - 'A';
-    if (pb.num) 
-        pb.process_input(letter);
+    pb.process_input(letter);
+
+    bool mapped_backwards = false;
+    rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
     rf.process_input(letter); 
-    rotors_ptr[1]->process_input(letter);
+    mapped_backwards = true;
+    rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+
+    pb.process_input(letter);
 
     output = letter + 'A';
     cout << output << endl;
     return 0;
+}
+
+void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards){
+    bool rotate_self = false, rotate_next = false;
+    if (!mapped_backwards) {
+        for (int i=0; i<num_of_rotors; i++) {
+            if (i == 0)
+                rotate_self = true;
+            else rotate_self = rotate_next;
+            rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+        }
+    } else {
+        rotate_self = false;
+        for (int i = num_of_rotors - 1; i >= 0; i--)
+            rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+    }
 }

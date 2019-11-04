@@ -44,6 +44,7 @@ int Plugboard::setup() {
 }
 
 void Plugboard::process_input(int& input) {
+  if (num == 0) return;
   for (int i=0; i < num; i++) {
     if (pb_config[i] == input) {
       if (i % 2 == 0)
@@ -130,16 +131,18 @@ int Rotor::setup() {
     return NON_NUMERIC_CHARACTER;
 
   // min 26: alphabets 0-25 + 1 notch
-  if(count < TOTAL_ALPHABET_COUNT)
-    return INVALID_ROTOR_MAPPING;
+  if(count < TOTAL_ALPHABET_COUNT) {
+    cout << "count err\n"; 
+    return INVALID_ROTOR_MAPPING;}
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rot_config[i] < 0 || rot_config[i] > 25)
       return INVALID_INDEX;
     
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
-      if(rot_config[i] == rot_config[j]) 
-        return INVALID_ROTOR_MAPPING;
+      if(rot_config[i] == rot_config[j]) {
+        cout << "repeated config err\n"; 
+        return INVALID_ROTOR_MAPPING;}
     }
   }
 
@@ -149,44 +152,56 @@ int Rotor::setup() {
       return INVALID_INDEX;
     
     for (int j= i + 1; j < num_of_notch; j++) {
-      if(notch[i] == notch[j]) 
-        return INVALID_ROTOR_MAPPING;
+      if(notch[i] == notch[j]) {
+        cout << "repeated notch\n";
+        return INVALID_ROTOR_MAPPING;}
     }
   }
   return NO_ERROR;
 }
 
 void Rotor::set_starting_position(int init) {
-  cout << "init: " << init << endl;
-  cout << "[0]: " << rot_config[0] << endl;
-  cout << "[25]: " << rot_config[25] << endl;  
-
   if(rot_config[0] == init) 
     return;
 
-  rotate(rot_config);
+  rotate();
   return set_starting_position(init);
 }
 
-void Rotor::process_input(int& input, bool mapped_backwards) {
+bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   cout << "rot input: " << input << endl;
   if (!mapped_backwards) {
     input = rot_config[input];
   } else 
     input = rot_config[25-input];
-  
-  rotate(rot_config);
   cout << "rot output: " << input << endl;
+  if (rotate_self) {
+    rotate();
+    cout << "after rotate [2]: " << rot_config[2] << endl;
+    return rotate_next();
+    }
+  return false;
 }
 
-void Rotor::rotate(int config[]) {
-  int last = config[TOTAL_ALPHABET_COUNT - 1];
+void Rotor::rotate() {
+  cout << "before rotate [2]: " << rot_config[2] << endl;
+  int last = rot_config[TOTAL_ALPHABET_COUNT - 1];
   int index = TOTAL_ALPHABET_COUNT - 1;
   for (; index >= 0; index--) {
     if (index == 0)
-      config[index] = last;
-    else config[index] = config[index - 1];
+      rot_config[index] = last;
+    else rot_config[index] = rot_config[index - 1];
   }
+}
+
+bool Rotor::rotate_next() {
+  for (int i=0; i<num_of_notch; i++) {
+    if (rot_config[0] == notch[i]) {
+      cout << "notch triggered: " << notch[i] << endl;
+      return true;
+      }
+  }
+  return false;
 }
 
 int prompt_for_input (char& input) {
@@ -217,7 +232,7 @@ void check_error (int res) {
     if (res == 0)
         return;
     else
-        cout << "Error. Res: " << res;
+        cout << "Error. ";
      
     switch (res) {
         case INSUFFICIENT_NUMBER_OF_PARAMETERS:
@@ -273,6 +288,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         check_error(res);
         rotor->set_starting_position(starting_pos[i]);
         rot_ptr[i] = rotor;
+        cout << "done setting up rotor: " << i << endl;
         i++;
     }
     return rot_ptr;
