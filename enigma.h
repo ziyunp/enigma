@@ -43,7 +43,7 @@ class Rotor {
 };
 
 int prompt_for_input (char input[], int& input_length);
-void check_error (int res);
+void check_error (int res, string source);
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]);
 int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]);
 void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards);

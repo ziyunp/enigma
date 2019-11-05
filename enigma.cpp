@@ -5,28 +5,29 @@
 #include "errors.h"
 using namespace std;
 
-
 Plugboard::Plugboard (char * config) : config_file(config) {}
 
 int Plugboard::setup() {
-  // assign values to data members: pb_config[], num
-
   ifstream in(config_file);
   if (!in) 
     return ERROR_OPENING_CONFIGURATION_FILE;
-
-  int count = 0;
-  in >> pb_config[count] >> ws;
-
-  while(!in.eof() && !in.fail()) {
-    in >> pb_config[++count] >> ws;
+  
+  int count, next_ch;
+  for (count=0; !in.eof() && !in.fail(); count++) {
+    in >> ws;
+    next_ch = in.peek();
+    in >> pb_config[count] >> ws;
   }
 
-  if(in.fail())
-    return NON_NUMERIC_CHARACTER;
+  if (in.fail()) {
+    if (next_ch == char_traits<char>::eof())
+      count = 0;
+    else if (!isdigit(next_ch))
+      return NON_NUMERIC_CHARACTER;
+  }
   
-  if (count > 0) {
-    num = count + 1;
+  num = count;
+  if (num > 0) {
     if(num % 2 != 0)
       return INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS;
 
@@ -59,23 +60,23 @@ void Plugboard::process_input(int& input) {
 Reflector::Reflector (char * config) : config_file(config) {}
 
 int Reflector::setup() {
-  // assign values to data members: rf_config[]
-
   ifstream in(config_file);
   if (!in) 
     return ERROR_OPENING_CONFIGURATION_FILE;
 
-  int count = 0;
-  in >> rf_config[count] >> ws;
-    
-  while(!in.eof() && !in.fail()) {
-    in >> rf_config[++count] >> ws;
+  int count, next_ch;
+  for (count=0; !in.eof() && !in.fail(); count++) {
+    in >> ws;
+    next_ch = in.peek();
+    in >> rf_config[count] >> ws;
   }
 
-  if(in.fail()) 
-    return NON_NUMERIC_CHARACTER;
+  if (in.fail()) {
+    if (!isdigit(next_ch))
+      return NON_NUMERIC_CHARACTER;
+  }
 
-  int num = count + 1;
+  int num = count;
   if(num != TOTAL_ALPHABET_COUNT)
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
 
@@ -106,8 +107,6 @@ void Reflector::process_input(int& input) {
 Rotor::Rotor (char * config) : config_file(config) {}
 
 int Rotor::setup() {
-  // assign values to data members: rot_config[], notch[], num_of_notch
-
   ifstream in(config_file);
   if (!in) 
     return ERROR_OPENING_CONFIGURATION_FILE;
@@ -221,52 +220,6 @@ int prompt_for_input (char input[], int& input_length) {
 
 }
 
-void check_error (int res) {
-    if (res == 0)
-        return;
-    else
-        cout << "Error. ";
-     
-    switch (res) {
-        case INSUFFICIENT_NUMBER_OF_PARAMETERS:
-            cout << "Insufficient number of parameters.\n";
-            break;
-        case INVALID_INPUT_CHARACTER: 
-            cout << "Invalid input character.\n";
-            break;
-        case INVALID_INDEX:
-            cout << "Invalid index.\n";
-            break;
-        case NON_NUMERIC_CHARACTER:
-            cout << "Non-numeric character.\n";
-            break;
-        case IMPOSSIBLE_PLUGBOARD_CONFIGURATION:
-            cout << "Impossible plugboard configuration.\n";
-            break;
-        case INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS:
-            cout << "Incorrect number of plugboard parameters.\n";
-            break;
-        case INVALID_ROTOR_MAPPING:
-            cout << "Invalid rotor mapping.\n";
-            break;
-        case NO_ROTOR_STARTING_POSITION:
-            cout << "No rotor starting position.\n";
-            break;
-        case INVALID_REFLECTOR_MAPPING:
-            cout << "Invalid reflector mapping.\n";
-            break;
-        case INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS:
-            cout << "Incorrect number of reflector parameters.\n";
-            break;
-        case ERROR_OPENING_CONFIGURATION_FILE:
-            cout << "Error opening configuration file.\n";
-            break;
-        default:
-            cout << "\n";
-    }
-    exit(res);
-}
-
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
 
@@ -278,7 +231,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         char * rot_file = argv[file_index];
         Rotor* rotor = new Rotor(rot_file);
         int res = rotor->setup();
-        check_error(res);
+        check_error(res, "rotor");
         rotor->set_starting_position(starting_pos[i]);
         rot_ptr[i] = rotor;
         i++;
@@ -323,4 +276,48 @@ void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr,
         for (int i=0; i<num_of_rotors; i++) 
             rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
     }
+}
+
+void check_error (int res, string source) {
+    if (res == 0)
+        return;
+     
+    switch (res) {
+        case INSUFFICIENT_NUMBER_OF_PARAMETERS:
+            cout << "usage:: enigma plugboard-file reflector-file (<rotor-file>)* rotor-positions\n";
+            break;
+        case INVALID_INPUT_CHARACTER: 
+            cout << "Invalid input character. Input characters must be upper case letters A-Z!\n";
+            break;
+        case INVALID_INDEX:
+            cout << "Invalid index.\n";
+            break;
+        case NON_NUMERIC_CHARACTER:
+            cout << "Non-numeric character in " << source << " file.\n";
+            break;
+        case IMPOSSIBLE_PLUGBOARD_CONFIGURATION:
+            cout << "Impossible plugboard configuration.\n";
+            break;
+        case INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS:
+            cout << "Incorrect number of parameters in plugboard file.\n";
+            break;
+        case INVALID_ROTOR_MAPPING:
+            cout << "Invalid rotor mapping.\n";
+            break;
+        case NO_ROTOR_STARTING_POSITION:
+            cout << "No rotor starting position.\n";
+            break;
+        case INVALID_REFLECTOR_MAPPING:
+            cout << "Invalid reflector mapping.\n";
+            break;
+        case INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS:
+            cout << "Incorrect number of parameters in reflector file.\n";
+            break;
+        case ERROR_OPENING_CONFIGURATION_FILE:
+            cout << "Error opening configuration file.\n";
+            break;
+        default:
+            cout << "\n";
+    }
+    exit(res);
 }
