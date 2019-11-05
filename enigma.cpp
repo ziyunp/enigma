@@ -92,8 +92,6 @@ int Reflector::setup() {
 }
 
 void Reflector::process_input(int& input) {
-  cout << "rf input: " << input << endl;
-  // better way of conversion?
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] == input) {
       if (i % 2 == 0)
@@ -132,7 +130,6 @@ int Rotor::setup() {
 
   // min 26: alphabets 0-25 + 1 notch
   if(count < TOTAL_ALPHABET_COUNT) {
-    cout << "count err\n"; 
     return INVALID_ROTOR_MAPPING;}
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
@@ -141,7 +138,6 @@ int Rotor::setup() {
     
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rot_config[i] == rot_config[j]) {
-        cout << "repeated config err\n"; 
         return INVALID_ROTOR_MAPPING;}
     }
   }
@@ -153,7 +149,6 @@ int Rotor::setup() {
     
     for (int j= i + 1; j < num_of_notch; j++) {
       if(notch[i] == notch[j]) {
-        cout << "repeated notch\n";
         return INVALID_ROTOR_MAPPING;}
     }
   }
@@ -169,35 +164,39 @@ void Rotor::set_starting_position(int init) {
 }
 
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
-  cout << "rot input: " << input << endl;
-  if (!mapped_backwards) {
-    input = rot_config[input];
-  } else 
-    input = rot_config[25-input];
-  cout << "rot output: " << input << endl;
+  bool notch_triggered = false;
   if (rotate_self) {
     rotate();
-    cout << "after rotate [2]: " << rot_config[2] << endl;
-    return rotate_next();
+    notch_triggered = rotate_next(); 
+  }
+
+  if (mapped_backwards) {
+    int target;
+    for (target = 0; target < TOTAL_ALPHABET_COUNT; target++) {
+      if (input == rot_config[target]) {
+        input = target;
+        break;
+      }
     }
-  return false;
+  } else
+      input = rot_config[input];
+
+  return notch_triggered;
 }
 
 void Rotor::rotate() {
-  cout << "before rotate [2]: " << rot_config[2] << endl;
-  int last = rot_config[TOTAL_ALPHABET_COUNT - 1];
-  int index = TOTAL_ALPHABET_COUNT - 1;
-  for (; index >= 0; index--) {
-    if (index == 0)
-      rot_config[index] = last;
-    else rot_config[index] = rot_config[index - 1];
+  int first = rot_config[0];
+  int index = 0;
+  for (; index < TOTAL_ALPHABET_COUNT; index++) {
+    if (index == TOTAL_ALPHABET_COUNT - 1)
+      rot_config[index] = first;
+    else rot_config[index] = rot_config[index + 1];
   }
 }
 
 bool Rotor::rotate_next() {
   for (int i=0; i<num_of_notch; i++) {
     if (rot_config[0] == notch[i]) {
-      cout << "notch triggered: " << notch[i] << endl;
       return true;
       }
   }
@@ -206,19 +205,6 @@ bool Rotor::rotate_next() {
 
 int prompt_for_input (char input[], int& input_length) {
   char input_arr[MAX_LENGTH];
-  cout << "Please input an uppercase letter (A-Z) to be encrypted/decrypted.\n";
-  // receive an array of chars and read in a loop
-  // check for invalid chars on looping / 
-  // discard whitespace
-  // char input_arr [MAX_LENGTH];
-  // cin >> input_arr;
-
-  // for (int i=0; i<MAX_LENGTH; i++) {
-  //     input = input_arr[i];
-
-  // }
-
-  // cout << input_arr << endl;
   cin.getline(input_arr, 80);
 
   int i, count = 0;
@@ -229,7 +215,6 @@ int prompt_for_input (char input[], int& input_length) {
       return INVALID_INPUT_CHARACTER;
     input[count++] = input_arr[i];
   }
-  cout << "count: " << count << endl;
   input_length = count;
 
   return NO_ERROR;
@@ -279,7 +264,7 @@ void check_error (int res) {
         default:
             cout << "\n";
     }
-    exit(1);
+    exit(res);
 }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
@@ -296,7 +281,6 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         check_error(res);
         rotor->set_starting_position(starting_pos[i]);
         rot_ptr[i] = rotor;
-        cout << "done setting up rotor: " << i << endl;
         i++;
     }
     return rot_ptr;
@@ -328,15 +312,15 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
 void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards){
     bool rotate_self = false, rotate_next = false;
     if (!mapped_backwards) {
-        for (int i=0; i<num_of_rotors; i++) {
-            if (i == 0)
+        for (int i = num_of_rotors - 1; i >= 0; i--) {
+            if (i == num_of_rotors - 1)
                 rotate_self = true;
             else rotate_self = rotate_next;
             rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
         }
     } else {
         rotate_self = false;
-        for (int i = num_of_rotors - 1; i >= 0; i--) 
+        for (int i=0; i<num_of_rotors; i++) 
             rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
     }
 }

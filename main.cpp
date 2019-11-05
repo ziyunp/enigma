@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    char input[MAX_LENGTH], output[MAX_LENGTH];
+    char input[MAX_LENGTH];
     int res = 0, num_of_rotors = 0, input_length = 0;
     if (argc < MIN_PARAMETERS) {
         res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
@@ -30,14 +30,12 @@ int main(int argc, char** argv) {
 
     Rotor** rotors_ptr = setup_rotors(num_of_rotors, argv, starting_pos); // need cleaning
 
-    cout << "This program simulates a general Enigma machine.\n";
     res = prompt_for_input(input, input_length);
     check_error(res);
-    for (int i=0; i<input_length; i++) 
-        cout << input[i] << endl;
-        
+    char output[input_length + 1];
     // process input: pb -> rotors -> rf -> rotors(backwards) -> pb
-    for (int i=0; i<input_length; i++) {
+    int i;
+    for (i=0; i<input_length; i++) {
         int letter = input[i] - 'A';
         pb.process_input(letter);
 
@@ -51,8 +49,8 @@ int main(int argc, char** argv) {
 
         output[i] = letter + 'A';
     }
-    for (int i=0; i<input_length; i++) 
-        cout << output[i] << endl;
+    output[input_length] = '\0';
+    cout << output << endl;
 
     return 0;
 }
