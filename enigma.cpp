@@ -202,24 +202,6 @@ bool Rotor::rotate_next() {
   return false;
 }
 
-int prompt_for_input (char input[], int& input_length) {
-  char input_arr[MAX_LENGTH];
-  cin.getline(input_arr, 80);
-
-  int i, count = 0;
-  for (i=0; input_arr[i] != '\0' && i < MAX_LENGTH; i++) {
-    if (input_arr[i] == ' ') 
-      continue;
-    if (input_arr[i] < 'A' || input_arr[i] > 'Z') 
-      return INVALID_INPUT_CHARACTER;
-    input[count++] = input_arr[i];
-  }
-  input_length = count;
-
-  return NO_ERROR;
-
-}
-
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
 
@@ -278,6 +260,36 @@ void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr,
     }
 }
 
+int process_inputs(char const input[], char output[], int& output_length, int num_of_rotors, Plugboard pb, Rotor** rotors_ptr, Reflector rf) {
+    int i;
+    for (i=0; input[i] != '\0' && i < MAX_LENGTH; i++) {
+        if (input[i] == ' ')
+            continue;
+        if (input[i] < 'A' || input[i] > 'Z') {
+            cout << input[i] << " is not a valid input character "  
+                << "(input characters must be upper case letters A-Z) !\n";
+            return INVALID_INPUT_CHARACTER;
+        }
+        // process input: pb -> rotors -> rf -> rotors(backwards) -> pb
+        int letter = input[i] - 'A';
+        pb.process_input(letter);
+
+        bool mapped_backwards = false;
+        if (num_of_rotors > 0) 
+            rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+        rf.process_input(letter); 
+        mapped_backwards = true;
+        if (num_of_rotors > 0)
+            rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+
+        pb.process_input(letter);
+
+        output[output_length++] = letter + 'A';
+    }
+    return NO_ERROR;
+}
+
+// to be removed:
 void check_error (int res, string source) {
     if (res == 0)
         return;
@@ -287,7 +299,7 @@ void check_error (int res, string source) {
             cout << "usage:: enigma plugboard-file reflector-file (<rotor-file>)* rotor-positions\n";
             break;
         case INVALID_INPUT_CHARACTER: 
-            cout << "Invalid input character. Input characters must be upper case letters A-Z!\n";
+            cout << "(input characters must be upper case letters A-Z) !\n";
             break;
         case INVALID_INDEX:
             cout << "Invalid index.\n";
@@ -319,5 +331,4 @@ void check_error (int res, string source) {
         default:
             cout << "\n";
     }
-    exit(res);
 }
