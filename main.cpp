@@ -6,10 +6,9 @@ using namespace std;
 int main(int argc, char** argv) {
     char input[MAX_LENGTH], output[MAX_LENGTH];
     int res = 0, num_of_rotors = 0, output_length = 0;
-    if (argc < MIN_PARAMETERS) {
-        cout << "usage:: enigma plugboard-file reflector-file (<rotor-file>)* rotor-positions\n";
-        return INSUFFICIENT_NUMBER_OF_PARAMETERS;
-    }
+    if (argc < MIN_PARAMETERS)
+        res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
+
     num_of_rotors = argc - MIN_PARAMETERS;
 
     // configure settings
@@ -35,10 +34,11 @@ int main(int argc, char** argv) {
     res = process_inputs(input, output, output_length, num_of_rotors, pb, rotors_ptr, rf, error_input);
     output[output_length] = '\0';
 
+    // reposition: cout output before exiting **
     for (int i=0; output[i] != '\0' && i<output_length; i++)
-        cout << output[i];
-
+      cout << output[i];
     if (res == INVALID_INPUT_CHARACTER && error_input) {
+        // output error message to std error stream!
         cout << "\n" << error_input << " is not a valid input character "
             << "(input characters must be upper case letters A-Z)!\n";
     }

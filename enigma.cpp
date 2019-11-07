@@ -90,10 +90,12 @@ int Reflector::setup() {
 
     in >> rf_config[count] >> ws;
   }
-
+  
+  cout << "count: " << count << endl;
+  
   int num = count;
   if (num % 2) {
-    cout << "Incorrect (odd) number of parameters in reflector file reflector.rf\n";
+    cout << "Incorrect (odd) number of parameters in reflector file: reflector.rf\n";
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
   } else {
     if(num < TOTAL_ALPHABET_COUNT) {
@@ -101,9 +103,6 @@ int Reflector::setup() {
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
     } 
   }
-
-  // if (in.fail()) {
-  // }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] < 0 || rf_config[i] > 25) {
@@ -180,7 +179,7 @@ int Rotor::setup() {
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rot_config[i] == rot_config[j]) {
         // Invalid mapping of input 13 to output 3 (output 3 is already mapped to from input 6) in
-        cout << "Invalid mapping of input " << j << " to output " << rot_config[j] << "(output " << rot_config[i] << " is already mapped to from input " << i << " )\n";
+        cout << "Invalid mapping of input " << j << " to output " << rot_config[j] << "(output " << rot_config[i] << " is already mapped to from input " << i << ")\n";
         return INVALID_ROTOR_MAPPING;
       }
     }
@@ -284,7 +283,7 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
       next_ch = in.peek();
       
       if (!isdigit(next_ch)) {
-        "Non-numeric character in rotor positions file rotor.pos\n";
+        cout << "Non-numeric character in rotor positions file rotor.pos\n";
         return NON_NUMERIC_CHARACTER;
       }
 
@@ -356,8 +355,7 @@ int process_inputs(char const input[], char output[], int& output_length, int nu
 }
 
 void check_error (int res) {
-    if (res == 0)
+    if (res == 0) 
         return;
-
     exit(res);
 }
