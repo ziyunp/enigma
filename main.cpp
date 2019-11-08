@@ -34,14 +34,14 @@ int main(int argc, char** argv) {
     res = process_inputs(input, output, output_length, num_of_rotors, pb, rotors_ptr, rf, error_input);
     output[output_length] = '\0';
 
-    // reposition: cout output before exiting **
     for (int i=0; output[i] != '\0' && i<output_length; i++)
       cout << output[i];
-    if (res == INVALID_INPUT_CHARACTER && error_input) {
-        // output error message to std error stream!
-        cout << "\n" << error_input << " is not a valid input character "
+
+    if (res == INVALID_INPUT_CHARACTER) {
+        cerr << error_input << " is not a valid input character "
             << "(input characters must be upper case letters A-Z)!\n";
     }
+
     check_error(res);
     
     for (int i=0; i<num_of_rotors; i++)

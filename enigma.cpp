@@ -11,7 +11,7 @@ int Plugboard::setup() {
   ifstream in(config_file);
   if (!in) {
     // fetch file name rather than hard coding!!
-    cout << "Error opening plugboard file plugboard.pb\n";
+    cerr << "Error opening plugboard file plugboard.pb\n";
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
@@ -21,7 +21,7 @@ int Plugboard::setup() {
     next_ch = in.peek();
     
     if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
-      cout << "Non-numeric character in plugboard file plugboard.pb\n";
+      cerr << "Non-numeric character in plugboard file plugboard.pb\n";
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -31,24 +31,28 @@ int Plugboard::setup() {
   if (in.fail()) {
     if (next_ch == char_traits<char>::eof())
       count = 0;
+    else {
+      cerr << "Error reading plugboard file plugboard.pb\n";
+      return ERROR_OPENING_CONFIGURATION_FILE;
+    }
   }
   
   num = count;
   if (num > 0) {
     if(num % 2 != 0) {
-      cout << "Incorrect number of parameters in plugboard file plugboard.pb\n";
+      cerr << "Incorrect number of parameters in plugboard file plugboard.pb\n";
       return INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS;
     }
 
     for (int i=0; i < num; i++) {
       if (pb_config[i] < 0 || pb_config[i] > 25){
-        cout << "Invalid index in plugboard file plugboard.pb (number should be between 0-25)\n";
+        cerr << "Invalid index in plugboard file plugboard.pb (number should be between 0-25)\n";
         return INVALID_INDEX;
       }
       
       for (int j= i + 1; j < num; j++) {
         if(pb_config[i] == pb_config[j]) {
-          cout << "Impossible plugboard configuration. There is more than one attempt to make contact with " << pb_config[i] << endl;
+          cerr << "Impossible plugboard configuration. There is more than one attempt to make contact with " << pb_config[i] << endl;
           return IMPOSSIBLE_PLUGBOARD_CONFIGURATION;
         }
       }
@@ -75,7 +79,7 @@ Reflector::Reflector (char * config) : config_file(config) {}
 int Reflector::setup() {
   ifstream in(config_file);
   if (!in) {
-    cout << "Error opening reflector file reflector.rf\n";
+    cerr << "Error opening reflector file reflector.rf\n";
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   int count, next_ch;
@@ -84,35 +88,43 @@ int Reflector::setup() {
     next_ch = in.peek();
 
     if (!isdigit(next_ch)) {
-      cout << "Non-numeric character in reflector file reflector.rf\n";
+      cerr << "Non-numeric character in reflector file reflector.rf\n";
       return NON_NUMERIC_CHARACTER;
     }
 
     in >> rf_config[count] >> ws;
   }
-  
-  cout << "count: " << count << endl;
+
+  if (in.fail()) {
+    cerr << "Error reading reflector file reflector.rf\n";
+    return ERROR_OPENING_CONFIGURATION_FILE;
+
+  }
   
   int num = count;
   if (num % 2) {
-    cout << "Incorrect (odd) number of parameters in reflector file: reflector.rf\n";
+    cerr << "Incorrect (odd) number of parameters in reflector file: reflector.rf\n";
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
   } else {
     if(num < TOTAL_ALPHABET_COUNT) {
-      cout << "Insufficient number of mappings in reflector file reflector.rf\n";
+      cerr << "Insufficient number of mappings in reflector file reflector.rf\n";
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
-    } 
+    } else if (num > TOTAL_ALPHABET_COUNT) {
+      cerr << "Too many number of mappings in reflector file reflector.rf\n";
+      return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
+    }
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] < 0 || rf_config[i] > 25) {
-      cout << "Invalid index in reflector file reflector.rf (number should be between 0-25)\n";
+      cerr << "Invalid index in reflector file reflector.rf (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
     
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rf_config[i] == rf_config[j]) {
-        cout << "Invalid reflector mapping: duplicated mapping of " << rf_config[i] << endl;
+        cerr << "Invalid reflector mapping: duplicated mapping of " 
+          << rf_config[i] << endl;
         return INVALID_REFLECTOR_MAPPING;
       }
     }
@@ -137,7 +149,7 @@ Rotor::Rotor (char * config) : config_file(config) {}
 int Rotor::setup() {
   ifstream in(config_file);
   if (!in) {
-    cout << "Error opening rotor file rotor.rot\n";
+    cerr << "Error opening rotor file rotor.rot\n";
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
@@ -149,7 +161,7 @@ int Rotor::setup() {
     next_ch = in.peek();
 
     if (!isdigit(next_ch)) {
-      cout << "Non-numeric character for mapping in rotor file rotor.rot\n";
+      cerr << "Non-numeric character for mapping in rotor file rotor.rot\n";
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -161,25 +173,27 @@ int Rotor::setup() {
 
   num_of_notch = notch_index;
 
-  // if(in.fail()) {
-  // }
+   if (in.fail()) {
+    cerr << "Error reading rotor file rotor.rot\n";
+    return ERROR_OPENING_CONFIGURATION_FILE;
+  }
 
-  // min 26: alphabets 0-25 + 1 notch
   if(count < TOTAL_ALPHABET_COUNT) {
-    cout << "Not all inputs mapped in rotor file: rotor.rot\n";
+    cerr << "Not all inputs mapped in rotor file: rotor.rot\n";
     return INVALID_ROTOR_MAPPING;
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rot_config[i] < 0 || rot_config[i] > 25) {
-      cout << "Invalid index in rotor configuration (number should be between 0-25)\n";
+      cerr << "Invalid index in rotor configuration (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
     
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rot_config[i] == rot_config[j]) {
-        // Invalid mapping of input 13 to output 3 (output 3 is already mapped to from input 6) in
-        cout << "Invalid mapping of input " << j << " to output " << rot_config[j] << "(output " << rot_config[i] << " is already mapped to from input " << i << ")\n";
+        cerr << "Invalid mapping of input " << j << " to output " 
+          << rot_config[j] << "(output " << rot_config[i] 
+          << " is already mapped to from input " << i << ")\n";
         return INVALID_ROTOR_MAPPING;
       }
     }
@@ -188,13 +202,13 @@ int Rotor::setup() {
   // check for repeated notch value
   for (int i=0; i < num_of_notch; i++) {
     if (notch[i] < 0 || notch[i] > 25) {
-      cout << "Invalid index for turnover notches (number should be between 0-25)\n";
+      cerr << "Invalid index for turnover notches (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
     
     for (int j= i + 1; j < num_of_notch; j++) {
       if(notch[i] == notch[j]) { 
-        cout << "Invalid mapping of notches: duplicated mapping of " << notch[i] << endl;
+        cerr << "Invalid mapping of notches: duplicated mapping of " << notch[i] << endl;
         return INVALID_ROTOR_MAPPING;
       }
     }
@@ -273,7 +287,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
 int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
     ifstream in(pos_file);
     if (!in) {
-      cout << "Error opening rotor positions file rotor.pos\n";
+      cerr << "Error opening rotor positions file rotor.pos\n";
       return ERROR_OPENING_CONFIGURATION_FILE;
     }
 
@@ -283,26 +297,31 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
       next_ch = in.peek();
       
       if (!isdigit(next_ch)) {
-        cout << "Non-numeric character in rotor positions file rotor.pos\n";
+        cerr << "Non-numeric character in rotor positions file rotor.pos\n";
         return NON_NUMERIC_CHARACTER;
       }
 
         in >> starting_pos[count] >> ws;
     }
 
+    if (in.fail()) {
+      cerr << "Error reading rotor positions file rotor.pos\n";
+      return ERROR_OPENING_CONFIGURATION_FILE;
+    }
+
     if(count < num_of_rotors) {
       if (num_of_rotors - count == 1)
-        cout << "No starting position for rotor 0 in rotor position file: rotor.pos\n";
+        cerr << "No starting position for rotor 0 in rotor position file: rotor.pos\n";
       
       else
-        cout << "No starting position for more than 1 rotor in rotor position file: rotor.pos\n";
+        cerr << "No starting position for more than 1 rotors in rotor position file: rotor.pos\n";
 
       return NO_ROTOR_STARTING_POSITION;
     }
 
     for (int i=0; i < num_of_rotors; i++) {
       if (starting_pos[i] < 0 || starting_pos[i] > 25) {
-        cout << "Invalid index in rotor position file: rotor.pos (number should be between 0-25)\n";
+        cerr << "Invalid index in rotor position file: rotor.pos (number should be between 0-25)\n";
         return INVALID_INDEX;
       }
     }
@@ -351,6 +370,11 @@ int process_inputs(char const input[], char output[], int& output_length, int nu
 
         output[output_length++] = letter + 'A';
     }
+    // output[output_length] = '\0';
+
+    // for (int i=0; output[i] != '\0' && i<output_length; i++)
+    //   cout << output[i];
+
     return NO_ERROR;
 }
 
