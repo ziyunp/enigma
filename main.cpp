@@ -6,8 +6,11 @@ using namespace std;
 int main(int argc, char** argv) {
     char input[MAX_LENGTH], output[MAX_LENGTH];
     int res = 0, num_of_rotors = 0, output_length = 0;
-    if (argc < MIN_PARAMETERS)
+    if (argc < MIN_PARAMETERS) {
+        cerr << "usage: enigma plugboard-file reflector-file (<rotor-file>)* rotor-postions\n";
         res = INSUFFICIENT_NUMBER_OF_PARAMETERS;
+    }
+    check_error(res);
 
     num_of_rotors = argc - MIN_PARAMETERS;
 
