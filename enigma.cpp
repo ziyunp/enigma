@@ -10,8 +10,7 @@ Plugboard::Plugboard (char * config) : config_file(config) {}
 int Plugboard::setup() {
   ifstream in(config_file);
   if (!in) {
-    // fetch file name rather than hard coding!!
-    cerr << "Error opening plugboard file plugboard.pb\n";
+    cerr << "Error opening plugboard file " << config_file << endl;
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
@@ -21,7 +20,7 @@ int Plugboard::setup() {
     next_ch = in.peek();
     
     if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
-      cerr << "Non-numeric character in plugboard file" << config_file << endl;
+      cerr << "Non-numeric character in plugboard file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -32,7 +31,7 @@ int Plugboard::setup() {
     if (next_ch == char_traits<char>::eof())
       count = 0;
     else {
-      cerr << "Error reading plugboard file plugboard.pb\n";
+      cerr << "Error reading plugboard file " << config_file << endl;
       return ERROR_OPENING_CONFIGURATION_FILE;
     }
   }
@@ -40,13 +39,13 @@ int Plugboard::setup() {
   num = count;
   if (num > 0) {
     if(num % 2 != 0) {
-      cerr << "Incorrect number of parameters in plugboard file plugboard.pb\n";
+      cerr << "Incorrect number of parameters in plugboard file " << config_file << endl;
       return INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS;
     }
 
     for (int i=0; i < num; i++) {
       if (pb_config[i] < 0 || pb_config[i] > 25){
-        cerr << "Invalid index in plugboard file plugboard.pb (number should be between 0-25)\n";
+        cerr << "Invalid index in plugboard file " << config_file << " (number should be between 0-25)\n";
         return INVALID_INDEX;
       }
       
@@ -79,7 +78,7 @@ Reflector::Reflector (char * config) : config_file(config) {}
 int Reflector::setup() {
   ifstream in(config_file);
   if (!in) {
-    cerr << "Error opening reflector file reflector.rf\n";
+    cerr << "Error opening reflector file " << config_file << endl;
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   int count, next_ch;
@@ -88,7 +87,7 @@ int Reflector::setup() {
     next_ch = in.peek();
 
     if (!isdigit(next_ch)) {
-      cerr << "Non-numeric character in reflector file reflector.rf\n";
+      cerr << "Non-numeric character in reflector file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -96,28 +95,28 @@ int Reflector::setup() {
   }
 
   if (in.fail()) {
-    cerr << "Error reading reflector file reflector.rf\n";
+    cerr << "Error reading reflector file " << config_file << endl;
     return ERROR_OPENING_CONFIGURATION_FILE;
 
   }
   
   int num = count;
   if (num % 2) {
-    cerr << "Incorrect (odd) number of parameters in reflector file reflector.rf\n";
+    cerr << "Incorrect (odd) number of parameters in reflector file " << config_file << endl;
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
   } else {
     if(num < TOTAL_ALPHABET_COUNT) {
-      cerr << "Insufficient number of mappings in reflector file: reflector.rf\n";
+      cerr << "Insufficient number of mappings in reflector file: " << config_file << endl;
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
     } else if (num > TOTAL_ALPHABET_COUNT) {
-      cerr << "Too many number of mappings in reflector file reflector.rf\n";
+      cerr << "Too many number of mappings in reflector file " << config_file << endl;
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
     }
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] < 0 || rf_config[i] > 25) {
-      cerr << "Invalid index in reflector file reflector.rf (number should be between 0-25)\n";
+      cerr << "Invalid index in reflector file " << config_file << " (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
     
@@ -149,7 +148,7 @@ Rotor::Rotor (char * config) : config_file(config) {}
 int Rotor::setup() {
   ifstream in(config_file);
   if (!in) {
-    cerr << "Error opening rotor file rotor.rot\n";
+    cerr << "Error opening rotor file " << config_file << endl;
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
@@ -161,7 +160,7 @@ int Rotor::setup() {
     next_ch = in.peek();
 
     if (!isdigit(next_ch)) {
-      cerr << "Non-numeric character for mapping in rotor file rotor.rot\n";
+      cerr << "Non-numeric character for mapping in rotor file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -174,12 +173,12 @@ int Rotor::setup() {
   num_of_notch = notch_index;
 
    if (in.fail()) {
-    cerr << "Error reading rotor file rotor.rot\n";
+    cerr << "Error reading rotor file " << config_file << endl; 
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
 
   if(count < TOTAL_ALPHABET_COUNT) {
-    cerr << "Not all inputs mapped in rotor file: rotor.rot\n";
+    cerr << "Not all inputs mapped in rotor file: " << config_file << endl;
     return INVALID_ROTOR_MAPPING;
   }
 
@@ -193,7 +192,7 @@ int Rotor::setup() {
       if(rot_config[i] == rot_config[j]) {
         cerr << "Invalid mapping of input " << j << " to output " 
           << rot_config[j] << " (output " << rot_config[i] 
-          << " is already mapped to from input " << i << ") in rotor file: rotor.rot\n";
+          << " is already mapped to from input " << i << ") in rotor file: " << config_file << endl;
         return INVALID_ROTOR_MAPPING;
       }
     }
@@ -227,8 +226,8 @@ void Rotor::set_starting_position(int init) {
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   bool notch_triggered = false;
   if (rotate_self) {
-    rotate();
-    notch_triggered = rotate_next(); 
+    notch_triggered = rotate();
+    //  rotate_next(); 
   }
 
   if (mapped_backwards) {
@@ -245,25 +244,30 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   return notch_triggered;
 }
 
-void Rotor::rotate() {
+bool Rotor::rotate() {
   int first = rot_config[0];
-  int index = 0;
-  for (; index < TOTAL_ALPHABET_COUNT; index++) {
+  for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
       rot_config[index] = first;
     else rot_config[index] = rot_config[index + 1];
   }
-}
-
-bool Rotor::rotate_next() {
   for (int i=0; i<num_of_notch; i++) {
-    // definition of the notch ???
-    if (rot_config[0] == notch[i]) {
+    if (first == notch[i]) {
       return true;
     }
   }
   return false;
 }
+
+// bool Rotor::rotate_next() {
+  // for (int i=0; i<num_of_notch; i++) {
+  //   // definition of the notch ???
+  //   if (rot_config[0] == notch[i]) {
+  //     return true;
+  //   }
+  // }
+  // return false;
+// }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
@@ -287,7 +291,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
 int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
     ifstream in(pos_file);
     if (!in) {
-      cerr << "Error opening rotor positions file rotor.pos\n";
+      cerr << "Error opening rotor positions file " << pos_file << endl;
       return ERROR_OPENING_CONFIGURATION_FILE;
     }
 
@@ -295,28 +299,34 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
     for (count=0; count < num_of_rotors && !in.eof() && !in.fail(); count++) {
       in >> ws;
       next_ch = in.peek();
-      cout << "next ch" << next_ch << endl;
       if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
-        cerr << "Non-numeric character in rotor positions file rotor.pos\n";
+        cerr << "Non-numeric character in rotor positions file " << pos_file << endl;
         return NON_NUMERIC_CHARACTER;
       }
 
         in >> starting_pos[count] >> ws;
     }
 
+    if (in.fail()) {
+      if (next_ch == char_traits<char>::eof()) {
+        cout << count << endl;
+        count--;
+      }
+    }
+
     if(count < num_of_rotors) {
       if (num_of_rotors - count == 1)
-        cerr << "No starting position for rotor 0 in rotor position file: rotor.pos\n";
+        cerr << "No starting position for rotor 0 in rotor position file: " << pos_file << endl;
       
       else
-        cerr << "No starting position for more than 1 rotors in rotor position file: rotor.pos\n";
+        cerr << "No starting position for more than 1 rotors in rotor position file: " << pos_file << endl;
 
       return NO_ROTOR_STARTING_POSITION;
     }
 
     for (int i=0; i < num_of_rotors; i++) {
       if (starting_pos[i] < 0 || starting_pos[i] > 25) {
-        cerr << "Invalid index in rotor position file: rotor.pos (number should be between 0-25)\n";
+        cerr << "Invalid index in rotor position file: " << pos_file << " (number should be between 0-25)\n";
         return INVALID_INDEX;
       }
     }

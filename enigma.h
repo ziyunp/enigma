@@ -31,7 +31,7 @@ class Rotor {
   int rot_config[TOTAL_ALPHABET_COUNT] = {};
   int notch[TOTAL_ALPHABET_COUNT] = {};
   int num_of_notch = 0;
-  void rotate();
+  bool rotate();
   bool rotate_next();
 
   public: 
