@@ -183,6 +183,7 @@ int Rotor::setup() {
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+    cout << i << ": " << rot_config[i] << endl;
     if (rot_config[i] < 0 || rot_config[i] > 25) {
       cerr << "Invalid index in rotor configuration (number should be between 0-25)\n";
       return INVALID_INDEX;
@@ -212,7 +213,6 @@ int Rotor::setup() {
       }
     }
     notch_position[i] = rot_config[notch[i]];
-    cout << "notch: " << notch[i] << "notch pos: " << notch_position[i] << endl;
   }
   return NO_ERROR;
 }
@@ -341,7 +341,6 @@ void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr,
             if (i == num_of_rotors - 1)
                 rotate_self = true;
             else rotate_self = rotate_next;
-            cout << "self: " << i << rotate_self << endl;
             rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
         }
     } else {
