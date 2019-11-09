@@ -61,6 +61,7 @@ int Plugboard::setup() {
 }
 
 void Plugboard::process_input(int& input) {
+  cout << "pb input:" << input << endl;
   if (num == 0) return;
   for (int i=0; i < num; i++) {
     if (pb_config[i] == input) {
@@ -132,6 +133,7 @@ int Reflector::setup() {
 }
 
 void Reflector::process_input(int& input) {
+  cout << "rf input: " << input << endl;
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] == input) {
       if (i % 2 == 0)
@@ -183,7 +185,6 @@ int Rotor::setup() {
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
-    cout << i << ": " << rot_config[i] << endl;
     if (rot_config[i] < 0 || rot_config[i] > 25) {
       cerr << "Invalid index in rotor configuration (number should be between 0-25)\n";
       return INVALID_INDEX;
@@ -218,6 +219,7 @@ int Rotor::setup() {
 }
 
 void Rotor::set_starting_position(int init) {
+  cout << init << endl;
   if(rot_config[0] == init) 
     return;
 
@@ -226,10 +228,11 @@ void Rotor::set_starting_position(int init) {
 }
 
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
+  cout << "rotor input: " << input << endl;
   bool notch_triggered = false;
   if (rotate_self) {
-    rotate();
-    notch_triggered = rotate_next(); 
+    notch_triggered = rotate();
+    // rotate_next(); 
   }
 
   if (mapped_backwards) {
@@ -246,29 +249,29 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   return notch_triggered;
 }
 
-void Rotor::rotate() {
+bool Rotor::rotate() {
   int first = rot_config[0];
   for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
       rot_config[index] = first;
     else rot_config[index] = rot_config[index + 1];
   }
-  // for (int i=0; i<num_of_notch; i++) {
-  //   if (first == notch_position[i]) {
-  //     return true;
-  //   }
-  // }
-  // return false;
-}
-
-bool Rotor::rotate_next() {
   for (int i=0; i<num_of_notch; i++) {
-    if (rot_config[0] == notch_position[i]) {
+    if (first == notch[i]) {
       return true;
     }
   }
   return false;
 }
+
+// bool Rotor::rotate_next() {
+//   for (int i=0; i<num_of_notch; i++) {
+//     if (rot_config[0] == notch_position[i]) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
