@@ -341,6 +341,7 @@ void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr,
             if (i == num_of_rotors - 1)
                 rotate_self = true;
             else rotate_self = rotate_next;
+            cout << "self: " << i << rotate_self << endl;
             rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
         }
     } else {
