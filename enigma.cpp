@@ -115,6 +115,7 @@ int Reflector::setup() {
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+    cout << "rf " << i << ": " << rf_config[i] << endl;
     if (rf_config[i] < 0 || rf_config[i] > 25) {
       cerr << "Invalid index in reflector file " << config_file << " (number should be between 0-25)\n";
       return INVALID_INDEX;
@@ -281,7 +282,6 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         Rotor* rotor = new Rotor(rot_file);
         int res = rotor->setup();
         check_error(res);
-        cout << "starting pos " << i << ": " << starting_pos[i] << endl;
         rotor->set_starting_position(starting_pos[i]);
         
         rot_ptr[i] = rotor;
