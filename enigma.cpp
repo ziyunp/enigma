@@ -211,6 +211,8 @@ int Rotor::setup() {
         return INVALID_ROTOR_MAPPING;
       }
     }
+    notch_position[i] = rot_config[notch[i]];
+    cout << "notch: " << notch[i] << "notch pos: " << notch_position[i] << endl;
   }
   return NO_ERROR;
 }
@@ -252,7 +254,7 @@ bool Rotor::rotate() {
     else rot_config[index] = rot_config[index + 1];
   }
   for (int i=0; i<num_of_notch; i++) {
-    if (first == notch[i]) {
+    if (first == notch_position[i]) {
       return true;
     }
   }
@@ -260,13 +262,13 @@ bool Rotor::rotate() {
 }
 
 // bool Rotor::rotate_next() {
-  // for (int i=0; i<num_of_notch; i++) {
-  //   // definition of the notch ???
-  //   if (rot_config[0] == notch[i]) {
-  //     return true;
-  //   }
-  // }
-  // return false;
+//   for (int i=0; i<num_of_notch; i++) {
+//     // definition of the notch ???
+//     if (rot_config[0] == notch_position[i]) {
+//       return true;
+//     }
+//   }
+//   return false;
 // }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
@@ -282,6 +284,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         int res = rotor->setup();
         check_error(res);
         rotor->set_starting_position(starting_pos[i]);
+        
         rot_ptr[i] = rotor;
         i++;
     }
@@ -309,11 +312,10 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
 
     if (in.fail()) {
       if (next_ch == char_traits<char>::eof()) {
-        cout << count << endl;
         count--;
       }
     }
-
+    cout << count << "num of rotors: " << num_of_rotors << endl;
     if(count < num_of_rotors) {
       if (num_of_rotors - count == 1)
         cerr << "No starting position for rotor 0 in rotor position file: " << pos_file << endl;

@@ -33,6 +33,7 @@ class Rotor {
   int num_of_notch = 0;
   bool rotate();
   bool rotate_next();
+  int notch_position[TOTAL_ALPHABET_COUNT] = {};
 
   public: 
     Rotor (char * config);
