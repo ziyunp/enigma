@@ -61,7 +61,6 @@ int Plugboard::setup() {
 }
 
 void Plugboard::process_input(int& input) {
-  cout << "pb input:" << input << endl;
   if (num == 0) return;
   for (int i=0; i < num; i++) {
     if (pb_config[i] == input) {
@@ -133,7 +132,6 @@ int Reflector::setup() {
 }
 
 void Reflector::process_input(int& input) {
-  cout << "rf input: " << input << endl;
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] == input) {
       if (i % 2 == 0)
@@ -219,7 +217,6 @@ int Rotor::setup() {
 }
 
 void Rotor::set_starting_position(int init) {
-  cout << init << endl;
   if(rot_config[0] == init) 
     return;
 
@@ -228,7 +225,6 @@ void Rotor::set_starting_position(int init) {
 }
 
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
-  cout << "rotor input: " << input << endl;
   bool notch_triggered = false;
   if (rotate_self) {
     notch_triggered = rotate();
@@ -285,6 +281,7 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
         Rotor* rotor = new Rotor(rot_file);
         int res = rotor->setup();
         check_error(res);
+        cout << "starting pos " << i << ": " << starting_pos[i] << endl;
         rotor->set_starting_position(starting_pos[i]);
         
         rot_ptr[i] = rotor;
@@ -301,7 +298,7 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
     }
 
     int count, next_ch;
-    for (count=0; count < num_of_rotors && !in.eof() && !in.fail(); count++) {
+    for (count=0; !in.eof() && !in.fail(); count++) {
       in >> ws;
       next_ch = in.peek();
       if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
