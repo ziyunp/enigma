@@ -21,7 +21,7 @@ int Plugboard::setup() {
     next_ch = in.peek();
     
     if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
-      cerr << "Non-numeric character in plugboard file plugboard.pb\n";
+      cerr << "Non-numeric character in plugboard file" << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
@@ -191,10 +191,9 @@ int Rotor::setup() {
     
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rot_config[i] == rot_config[j]) {
-        // end with 'in'?
         cerr << "Invalid mapping of input " << j << " to output " 
           << rot_config[j] << " (output " << rot_config[i] 
-          << " is already mapped to from input " << i << ") in\n";
+          << " is already mapped to from input " << i << ") in rotor file: rotor.rot\n";
         return INVALID_ROTOR_MAPPING;
       }
     }
@@ -261,7 +260,7 @@ bool Rotor::rotate_next() {
     // definition of the notch ???
     if (rot_config[0] == notch[i]) {
       return true;
-      }
+    }
   }
   return false;
 }
@@ -296,18 +295,13 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
     for (count=0; count < num_of_rotors && !in.eof() && !in.fail(); count++) {
       in >> ws;
       next_ch = in.peek();
-      
+      cout << "next ch" << next_ch << endl;
       if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
         cerr << "Non-numeric character in rotor positions file rotor.pos\n";
         return NON_NUMERIC_CHARACTER;
       }
 
         in >> starting_pos[count] >> ws;
-    }
-
-    if (in.fail()) {
-      cerr << "Error reading rotor positions file rotor.pos\n";
-      return ERROR_OPENING_CONFIGURATION_FILE;
     }
 
     if(count < num_of_rotors) {
