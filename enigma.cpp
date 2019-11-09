@@ -228,8 +228,8 @@ void Rotor::set_starting_position(int init) {
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   bool notch_triggered = false;
   if (rotate_self) {
-    notch_triggered = rotate();
-    //  rotate_next(); 
+    rotate();
+    notch_triggered = rotate_next(); 
   }
 
   if (mapped_backwards) {
@@ -246,30 +246,29 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   return notch_triggered;
 }
 
-bool Rotor::rotate() {
+void Rotor::rotate() {
   int first = rot_config[0];
   for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
       rot_config[index] = first;
     else rot_config[index] = rot_config[index + 1];
   }
+  // for (int i=0; i<num_of_notch; i++) {
+  //   if (first == notch_position[i]) {
+  //     return true;
+  //   }
+  // }
+  // return false;
+}
+
+bool Rotor::rotate_next() {
   for (int i=0; i<num_of_notch; i++) {
-    if (first == notch_position[i]) {
+    if (rot_config[0] == notch_position[i]) {
       return true;
     }
   }
   return false;
 }
-
-// bool Rotor::rotate_next() {
-//   for (int i=0; i<num_of_notch; i++) {
-//     // definition of the notch ???
-//     if (rot_config[0] == notch_position[i]) {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
@@ -315,14 +314,14 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
         count--;
       }
     }
-    cout << count << "num of rotors: " << num_of_rotors << endl;
-    if(count < num_of_rotors) {
-      if (num_of_rotors - count == 1)
-        cerr << "No starting position for rotor 0 in rotor position file: " << pos_file << endl;
-      
-      else
-        cerr << "No starting position for more than 1 rotors in rotor position file: " << pos_file << endl;
 
+    if(count < num_of_rotors) {
+      if (num_of_rotors - count == 1) {
+        cerr << "No starting position for rotor 0 in rotor position file: " << pos_file << endl;
+      }
+      else {
+        cerr << "No starting position for more than 1 rotors in rotor position file: " << pos_file << endl;
+      }
       return NO_ROTOR_STARTING_POSITION;
     }
 
