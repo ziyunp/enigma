@@ -44,6 +44,7 @@ int Plugboard::setup() {
     }
 
     for (int i=0; i < num; i++) {
+      cout << pb_config[i] << endl;
       if (pb_config[i] < 0 || pb_config[i] > 25){
         cerr << "Invalid index in plugboard file " << config_file << " (number should be between 0-25)\n";
         return INVALID_INDEX;
@@ -115,7 +116,6 @@ int Reflector::setup() {
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
-    cout << "rf " << i << ": " << rf_config[i] << endl;
     if (rf_config[i] < 0 || rf_config[i] > 25) {
       cerr << "Invalid index in reflector file " << config_file << " (number should be between 0-25)\n";
       return INVALID_INDEX;
