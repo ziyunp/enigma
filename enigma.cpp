@@ -216,11 +216,13 @@ int Rotor::setup() {
 }
 
 void Rotor::set_starting_position(int init) {
-  if(rot_config[0] == init) 
+  if(init == 0) 
     return;
-
-  rotate();
-  return set_starting_position(init);
+  else {
+    for (int i = init; i > 0; i--) {
+      rotate();
+    }
+  }
 }
 
 bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
@@ -237,6 +239,9 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
     }
   } else {
     input = rot_config[input] - num_of_rotations;
+    if (input < 0) {
+      input = TOTAL_ALPHABET_COUNT + input;
+    }
   }
   return notch_triggered;
 }
@@ -262,9 +267,9 @@ Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
 
     Rotor** rot_ptr = new Rotor * [num] {};
     int const min_file_index = 3, max_file_index = 3 + num;
-    int file_index = min_file_index, i=0;
+    int file_index, i=0;
 
-    for (; file_index < max_file_index; file_index++) {
+    for (file_index = min_file_index; file_index < max_file_index; file_index++) {
         char * rot_file = argv[file_index];
         Rotor* rotor = new Rotor(rot_file);
         int res = rotor->setup();
