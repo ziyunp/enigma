@@ -33,7 +33,6 @@ int main(int argc, char** argv) {
     Rotor** rotors_ptr = setup_rotors(num_of_rotors, argv, starting_pos);
 
     cin.getline(input, MAX_LENGTH);
-    cout << "input: " << input[1] << endl;
     char error_input;
     res = process_inputs(input, output, output_length, num_of_rotors, pb, rotors_ptr, rf, error_input);
     output[output_length] = '\0';

@@ -44,7 +44,6 @@ int Plugboard::setup() {
     }
 
     for (int i=0; i < num; i++) {
-      cout << pb_config[i] << endl;
       if (pb_config[i] < 0 || pb_config[i] > 25){
         cerr << "Invalid index in plugboard file " << config_file << " (number should be between 0-25)\n";
         return INVALID_INDEX;
@@ -212,7 +211,6 @@ int Rotor::setup() {
         return INVALID_ROTOR_MAPPING;
       }
     }
-    notch_position[i] = rot_config[notch[i]];
   }
   return NO_ERROR;
 }
@@ -229,24 +227,22 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   bool notch_triggered = false;
   if (rotate_self) {
     notch_triggered = rotate();
-    // rotate_next(); 
   }
 
   if (mapped_backwards) {
-    int target;
-    for (target = 0; target < TOTAL_ALPHABET_COUNT; target++) {
-      if (input == rot_config[target]) {
-        input = target;
-        break;
-      }
+    int target = rot_config[input];
+    input = target - num_of_rotations;
+    if (input < 0) {
+      input = TOTAL_ALPHABET_COUNT + input;
     }
-  } else
-      input = rot_config[input];
-
+  } else {
+    input = rot_config[input] - num_of_rotations;
+  }
   return notch_triggered;
 }
 
 bool Rotor::rotate() {
+  num_of_rotations++;
   int first = rot_config[0];
   for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
@@ -260,15 +256,6 @@ bool Rotor::rotate() {
   }
   return false;
 }
-
-// bool Rotor::rotate_next() {
-//   for (int i=0; i<num_of_notch; i++) {
-//     if (rot_config[0] == notch_position[i]) {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
 
 Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
     if (num == 0) return NULL;
