@@ -233,6 +233,8 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
 
   if (mapped_backwards) {
     int target = input + num_of_rotations;
+    if (target > TOTAL_ALPHABET_COUNT - 1) 
+      target -= TOTAL_ALPHABET_COUNT;
     for (int i=0; i<TOTAL_ALPHABET_COUNT; i++) {
       if (rot_config[i] == target) {
         input = i;
