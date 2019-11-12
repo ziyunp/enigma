@@ -152,8 +152,8 @@ int Rotor::setup() {
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
-  int notch_index = 0;
-  int count, num_of_notch, next_ch;
+  static int notch_index = 0;
+  int count, next_ch;
   
   for (count=0; !in.eof() && !in.fail(); count++) {
     in >> ws;
@@ -164,14 +164,17 @@ int Rotor::setup() {
       return NON_NUMERIC_CHARACTER;
     }
 
-    if (count >= TOTAL_ALPHABET_COUNT)
-      in >> notch[notch_index++] >> ws;
+    if (count >= TOTAL_ALPHABET_COUNT) {
+      in >> notch[notch_index] >> ws;
+      notch_index++;
+    }
     else 
       in >> rot_config[count] >> ws;
     }
 
-  num_of_notch = notch_index;
-
+    num_of_notch = notch_index;
+    notch_index = 0;
+  
    if (in.fail()) {
     cerr << "Error reading rotor file " << config_file << endl; 
     return ERROR_OPENING_CONFIGURATION_FILE;
@@ -197,7 +200,6 @@ int Rotor::setup() {
       }
     }
   }
-
   // check for repeated notch value
   for (int i=0; i < num_of_notch; i++) {
     if (notch[i] < 0 || notch[i] > 25) {
@@ -232,7 +234,7 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   }
 
   if (mapped_backwards) {
-    int target = input + num_of_rotations;
+    int target = input + offset;
     if (target > TOTAL_ALPHABET_COUNT - 1) 
       target -= TOTAL_ALPHABET_COUNT;
     for (int i=0; i<TOTAL_ALPHABET_COUNT; i++) {
@@ -241,7 +243,7 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
       }
     }
   } else {
-    input = rot_config[input] - num_of_rotations;
+    input = rot_config[input] - offset;
     if (input < 0) {
       input = TOTAL_ALPHABET_COUNT + input;
     }
@@ -250,10 +252,10 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
 }
 
 bool Rotor::rotate() {
-  if (num_of_rotations < TOTAL_ALPHABET_COUNT - 1)
-    num_of_rotations++;
+  if (offset < TOTAL_ALPHABET_COUNT - 1)
+    offset++;
   else 
-    num_of_rotations = 0;
+    offset = 0;
   int first = rot_config[0];
   for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
@@ -261,7 +263,7 @@ bool Rotor::rotate() {
     else rot_config[index] = rot_config[index + 1];
   }
   for (int i=0; i<num_of_notch; i++) {
-    if (first == notch[i]) {
+    if (offset == notch[i]) {
       return true;
     }
   }

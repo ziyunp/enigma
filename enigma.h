@@ -33,7 +33,8 @@ class Rotor {
   int num_of_notch = 0;
   bool rotate();
   bool rotate_next();
-  int num_of_rotations = 0;
+  int offset = 0;
+
   public: 
     Rotor (char * config);
     int setup();
