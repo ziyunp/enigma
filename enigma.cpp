@@ -232,10 +232,11 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
   }
 
   if (mapped_backwards) {
-    int target = rot_config[input];
-    input = target - num_of_rotations;
-    if (input < 0) {
-      input = TOTAL_ALPHABET_COUNT + input;
+    int target = input + num_of_rotations;
+    for (int i=0; i<TOTAL_ALPHABET_COUNT; i++) {
+      if (rot_config[i] == target) {
+        input = i;
+      }
     }
   } else {
     input = rot_config[input] - num_of_rotations;
