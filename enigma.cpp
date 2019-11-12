@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
-
 #include "enigma.h"
 #include "errors.h"
 using namespace std;
 
+/**************************** Plugboard ****************************/
 Plugboard::Plugboard (char * config) : config_file(config) {}
 
 int Plugboard::setup() {
@@ -14,44 +14,49 @@ int Plugboard::setup() {
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
-  int count, next_ch;
-  for (count=0; !in.eof() && !in.fail(); count++) {
-    in >> ws;
+  int next_ch;
+  for (num_of_parameters=0; !in.eof() && !in.fail(); num_of_parameters++) {
+    in >> ws; // eat up leading ws
     next_ch = in.peek();
     
+    // check if the next character is a valid character type and not a digit 
     if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
       cerr << "Non-numeric character in plugboard file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
-    in >> pb_config[count] >> ws;
+    in >> pb_config[num_of_parameters] >> ws; // eat up ws after the integer
   }
 
   if (in.fail()) {
+    // if failed because file is empty, decrement num_of_parameters 
     if (next_ch == char_traits<char>::eof())
-      count = 0;
+      num_of_parameters--;
     else {
       cerr << "Error reading plugboard file " << config_file << endl;
       return ERROR_OPENING_CONFIGURATION_FILE;
     }
   }
   
-  num = count;
-  if (num > 0) {
-    if(num % 2 != 0) {
-      cerr << "Incorrect number of parameters in plugboard file " << config_file << endl;
+  if (num_of_parameters > 0) {
+    // there must be an even number of parameters
+    if(num_of_parameters % 2 != 0) {
+      cerr << "Incorrect number of parameters in plugboard file " 
+        << config_file << endl;
       return INCORRECT_NUMBER_OF_PLUGBOARD_PARAMETERS;
     }
-
-    for (int i=0; i < num; i++) {
+    // indexes must be 0-25
+    for (int i=0; i < num_of_parameters; i++) {
       if (pb_config[i] < 0 || pb_config[i] > 25){
-        cerr << "Invalid index in plugboard file " << config_file << " (number should be between 0-25)\n";
+        cerr << "Invalid index in plugboard file " << config_file 
+          << " (number should be between 0-25)\n";
         return INVALID_INDEX;
       }
-      
-      for (int j= i + 1; j < num; j++) {
+      // check for duplicated parameters 
+      // i.e. mapped to self or being mapped to for more than once
+      for (int j= i + 1; j < num_of_parameters; j++) {
         if(pb_config[i] == pb_config[j]) {
-          cerr << "Impossible plugboard configuration. There is more than one attempt to make contact with " << pb_config[i] << endl;
+          cerr << "Impossible plugboard configuration. There is more than one "   << "attempt to make contact with " << pb_config[i] << endl;
           return IMPOSSIBLE_PLUGBOARD_CONFIGURATION;
         }
       }
@@ -61,8 +66,8 @@ int Plugboard::setup() {
 }
 
 void Plugboard::process_input(int& input) {
-  if (num == 0) return;
-  for (int i=0; i < num; i++) {
+  if (num_of_parameters == 0) return;
+  for (int i=0; i < num_of_parameters; i++) {
     if (pb_config[i] == input) {
       if (i % 2 == 0)
         input = pb_config[i+1];
@@ -73,6 +78,7 @@ void Plugboard::process_input(int& input) {
   }
 }
 
+/**************************** Reflector ****************************/
 Reflector::Reflector (char * config) : config_file(config) {}
 
 int Reflector::setup() {
@@ -85,7 +91,8 @@ int Reflector::setup() {
   for (count=0; !in.eof() && !in.fail(); count++) {
     in >> ws;
     next_ch = in.peek();
-
+  
+    // check if the next character is not a digit 
     if (!isdigit(next_ch)) {
       cerr << "Non-numeric character in reflector file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
@@ -99,26 +106,29 @@ int Reflector::setup() {
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
   
-  int num = count;
-  if (num % 2) {
-    cerr << "Incorrect (odd) number of parameters in reflector file " << config_file << endl;
+  // there must be exactly 13 pairs of parameters 
+  if (count % 2) {
+    cerr << "Incorrect (odd) number of parameters in reflector file " 
+      << config_file << endl;
     return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
   } else {
-    if(num < TOTAL_ALPHABET_COUNT) {
-      cerr << "Insufficient number of mappings in reflector file: " << config_file << endl;
+    if(count < TOTAL_ALPHABET_COUNT) {
+      cerr << "Insufficient number of mappings in reflector file: " 
+        << config_file << endl;
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
-    } else if (num > TOTAL_ALPHABET_COUNT) {
-      cerr << "Too many number of mappings in reflector file " << config_file << endl;
+    } else if (count > TOTAL_ALPHABET_COUNT) {
+      cerr << "Too many number of mappings in reflector file " << config_file     << endl;
       return INCORRECT_NUMBER_OF_REFLECTOR_PARAMETERS;
     }
   }
-
+  // indexes must be 0-25
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
     if (rf_config[i] < 0 || rf_config[i] > 25) {
       cerr << "Invalid index in reflector file " << config_file << " (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
-    
+    // check for duplicated parameters 
+    // i.e. mapped to self or being mapped to for more than once
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rf_config[i] == rf_config[j]) {
         cerr << "Invalid reflector mapping: duplicated mapping of " 
@@ -142,6 +152,7 @@ void Reflector::process_input(int& input) {
   }
 }
 
+/**************************** Rotor ****************************/
 Rotor::Rotor (char * config) : config_file(config) {}
 
 int Rotor::setup() {
@@ -157,11 +168,14 @@ int Rotor::setup() {
     in >> ws;
     next_ch = in.peek();
 
-    if (!isdigit(next_ch)) {
+    // check if the next character is a valid character type and not a digit 
+    if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
       cerr << "Non-numeric character for mapping in rotor file " << config_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
+    // 0-25th parameters specify rotor configuration
+    // 26th onwards specify the positions of notches
     if (count >= TOTAL_ALPHABET_COUNT)
       in >> notch[num_of_notch++] >> ws;
     else 
@@ -173,17 +187,21 @@ int Rotor::setup() {
     return ERROR_OPENING_CONFIGURATION_FILE;
   }
 
+  // there must be at least 26 parameters to specify rotor configuration
   if(count < TOTAL_ALPHABET_COUNT) {
     cerr << "Not all inputs mapped in rotor file: " << config_file << endl;
     return INVALID_ROTOR_MAPPING;
   }
 
   for (int i=0; i < TOTAL_ALPHABET_COUNT; i++) {
+    // indexes must be 0-25
     if (rot_config[i] < 0 || rot_config[i] > 25) {
       cerr << "Invalid index in rotor configuration (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
     
+    // check for duplicated parameters 
+    // i.e. mapped to self or being mapped to for more than once
     for (int j= i + 1; j < TOTAL_ALPHABET_COUNT; j++) {
       if(rot_config[i] == rot_config[j]) {
         cerr << "Invalid mapping of input " << j << " to output " 
@@ -194,13 +212,13 @@ int Rotor::setup() {
     }
   }
 
-  // check for repeated notch value
   for (int i=0; i < num_of_notch; i++) {
+    // notch position must be 0-25
     if (notch[i] < 0 || notch[i] > 25) {
       cerr << "Invalid index for turnover notches (number should be between 0-25)\n";
       return INVALID_INDEX;
     }
-    
+    // check for duplicated notch position
     for (int j= i + 1; j < num_of_notch; j++) {
       if(notch[i] == notch[j]) { 
         cerr << "Invalid mapping of notches: duplicated mapping of " << notch[i] << endl;
@@ -211,11 +229,13 @@ int Rotor::setup() {
   return NO_ERROR;
 }
 
-void Rotor::set_starting_position(int init) {
-  if(init == 0) 
+void Rotor::set_starting_position(int starting_pos) {
+  // set starting_pos to top (index 0)
+  if(starting_pos == 0) 
     return;
   else {
-    for (int i = init; i > 0; i--)
+    // rotate for as many times as the specified starting_position
+    for (int i = starting_pos; i > 0; i--)
       rotate();
   }
 }
@@ -226,14 +246,19 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
     notch_triggered = rotate();
 
   if (mapped_backwards) {
+    // + offset when mapped backwards
     int target = input + offset;
     if (target > TOTAL_ALPHABET_COUNT - 1) 
       target -= TOTAL_ALPHABET_COUNT;
+  
+    // output (modified input) as the index (from top) where target is matched
     for (int i=0; i<TOTAL_ALPHABET_COUNT; i++) {
       if (rot_config[i] == target)
         input = i;
     }
   } else {
+    // - offset when mapped forward
+    // output (modified input) as the value at index (from top) == input
     input = rot_config[input] - offset;
     if (input < 0)
       input = TOTAL_ALPHABET_COUNT + input;
@@ -242,44 +267,51 @@ bool Rotor::process_input(int& input, bool rotate_self, bool mapped_backwards) {
 }
 
 bool Rotor::rotate() {
+  // record offset from initial index on every rotation
   if (offset < TOTAL_ALPHABET_COUNT - 1)
     offset++;
   else 
     offset = 0;
+
+  // rotate by shifting up 1 position
   int first = rot_config[0];
   for (int index = 0; index < TOTAL_ALPHABET_COUNT; index++) {
     if (index == TOTAL_ALPHABET_COUNT - 1)
       rot_config[index] = first;
     else rot_config[index] = rot_config[index + 1];
   }
+  // check if notch is triggered i.e. the notch is at top position
   for (int i=0; i<num_of_notch; i++) {
+    // offset indicates the number of rotations. 
+    // after n rotations, the nth position will be at the top
     if (offset == notch[i])
       return true;
   }
   return false;
 }
+      
+Rotor** setup_rotors(int num_of_rotors, char** const argv, int const starting_pos[]) {
+  if (num_of_rotors == 0) return NULL;
 
-Rotor** setup_rotors(int num, char** const argv, int const starting_pos[]) {
-  if (num == 0) return NULL;
-
-  Rotor** rot_ptr = new Rotor * [num] {};
-  int const min_file_index = 3, max_file_index = 3 + num;
+  Rotor** rot_ptr = new Rotor * [num_of_rotors] {};
+  int const min_file_index = 3, max_file_index = 3 + num_of_rotors;
   int file_index, i=0;
 
+  // read rotor configs from index 3 of command line arguments
   for (file_index = min_file_index; file_index < max_file_index; file_index++) {
       char * rot_file = argv[file_index];
       Rotor* rotor = new Rotor(rot_file);
       int res = rotor->setup();
       check_error(res);
       rotor->set_starting_position(starting_pos[i]);
-      
       rot_ptr[i] = rotor;
       i++;
   }
   return rot_ptr;
 } 
 
-int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
+/**************************** Free Functions ****************************/
+int get_starting_pos(char * pos_file, int num_of_rotors, int starting_pos[]) {
   ifstream in(pos_file);
   if (!in) {
     cerr << "Error opening rotor positions file " << pos_file << endl;
@@ -290,20 +322,23 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
   for (count=0; !in.eof() && !in.fail(); count++) {
     in >> ws;
     next_ch = in.peek();
+    
+    // check if the next character is a valid character type and not a digit 
     if (next_ch != char_traits<char>::eof() && !isdigit(next_ch)) {
       cerr << "Non-numeric character in rotor positions file " << pos_file << endl;
       return NON_NUMERIC_CHARACTER;
     }
 
-      in >> starting_pos[count] >> ws;
+    in >> starting_pos[count] >> ws;
   }
 
   if (in.fail()) {
-    if (next_ch == char_traits<char>::eof()) {
+    // if failed because file is empty, decrement num_of_parameters 
+    if (next_ch == char_traits<char>::eof())
       count--;
-    }
   }
 
+  // check if there are sufficient starting positions for all rotors
   if(count < num_of_rotors) {
     if (num_of_rotors - count == 1) {
       cerr << "No starting position for rotor 0 in rotor position file: " << pos_file << endl;
@@ -315,6 +350,7 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
   }
 
   for (int i=0; i < num_of_rotors; i++) {
+    // starting positions must be 0-25
     if (starting_pos[i] < 0 || starting_pos[i] > 25) {
       cerr << "Invalid index in rotor position file: " << pos_file << " (number should be between 0-25)\n";
       return INVALID_INDEX;
@@ -323,54 +359,66 @@ int open_pos_file(char * pos_file, int num_of_rotors, int starting_pos[]) {
   return NO_ERROR;
 }
 
-void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards){
+void rotors_processing(int& letter, int const num_of_rotors, Rotor** rotors_ptr, bool mapped_backwards) {
   bool rotate_self = false, rotate_next = false;
   if (!mapped_backwards) {
-      for (int i = num_of_rotors - 1; i >= 0; i--) {
-          if (i == num_of_rotors - 1)
-              rotate_self = true;
-          else rotate_self = rotate_next;
-          rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
-      }
+    // when mapped forward, input enters from R to L. Rotors may rotate
+    for (int i = num_of_rotors - 1; i >= 0; i--) {
+      // the rightmost rotor always rotates
+      if (i == num_of_rotors - 1)
+        rotate_self = true;
+      // other rotors depend on whether the right rotor triggered a notch
+      else rotate_self = rotate_next;
+
+      rotate_next = rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+    }
   } else {
-      rotate_self = false;
-      for (int i=0; i<num_of_rotors; i++) 
-          rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
+    // when mapped backward, input enters from L to R. Rotors will not rotate
+    rotate_self = false;
+    for (int i=0; i<num_of_rotors; i++) 
+      rotors_ptr[i]->process_input(letter, rotate_self, mapped_backwards);
   }
 }
 
 int process_inputs(char const input[], char output[], int& output_length, int num_of_rotors, Plugboard pb, Rotor** rotors_ptr, Reflector rf, char& error_input) {
-  int i;
-  for (i=0; input[i] != '\0' && i < MAX_LENGTH; i++) {
-      if (input[i] == ' ')
-          continue;
-      if (input[i] < 'A' || input[i] > 'Z') {
-        error_input = input[i];
-        return INVALID_INPUT_CHARACTER;
-      }
+  for (int i=0; input[i] != '\0' && i < MAX_LENGTH; i++) {
+    // ignore any whitespace
+    if (input[i] == ' ')
+        continue;
+    // input must be A-Z
+    if (input[i] < 'A' || input[i] > 'Z') {
+      error_input = input[i];
+      return INVALID_INPUT_CHARACTER;
+    }
+    // convert input to int type
+    int letter = input[i] - 'A';
 
-      // process input: pb -> rotors -> rf -> rotors(backwards) -> pb
-      int letter = input[i] - 'A';
-      pb.process_input(letter);
+    // first plugboard process: 
+    pb.process_input(letter);
 
-      bool mapped_backwards = false;
-      if (num_of_rotors > 0) 
-          rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
-      rf.process_input(letter); 
-      mapped_backwards = true;
-      if (num_of_rotors > 0)
-          rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+    // passing through rotors R-L (forward): 
+    bool mapped_backwards = false;
+    if (num_of_rotors > 0) 
+      rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
 
-      pb.process_input(letter);
+    // reflector process:
+    rf.process_input(letter); 
 
-      output[output_length++] = letter + 'A';
+    // passing through rotors L-R (backward):
+    mapped_backwards = true;
+    if (num_of_rotors > 0)
+      rotors_processing(letter, num_of_rotors, rotors_ptr, mapped_backwards);
+
+    // second plugboard process: 
+    pb.process_input(letter);
+
+    output[output_length++] = letter + 'A';
   }
-
   return NO_ERROR;
 }
 
 void check_error (int res) {
-  if (res == 0) 
-      return;
+  if (res == NO_ERROR) 
+    return;
   exit(res);
 }
